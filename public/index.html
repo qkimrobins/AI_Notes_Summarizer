@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Notes Summarizer</title>
+    <meta
+      name="description"
+      content="Turn long study notes into summaries, key points, and easy explanations in seconds."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Source+Serif+4:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Exam revision, without the overwhelm</span>
+          <h1>Turn messy notes into clear study wins.</h1>
+          <p>
+            Paste long notes and get a short summary, revision bullets, and an
+            easy explanation that actually helps you remember the topic.
+          </p>
+          <div class="hero-badges">
+            <span>3 study views</span>
+            <span>Copy and download</span>
+            <span>Built for students</span>
+          </div>
+        </div>
+
+        <div class="hero-card">
+          <p class="card-label">Student problem solved</p>
+          <h2>Too much reading. Not enough revision time.</h2>
+          <p>
+            This app cuts long notes down into the parts students need most
+            before class tests, assignments, and exams.
+          </p>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="panel input-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Step 1</p>
+              <h2>Paste your notes</h2>
+            </div>
+            <div class="counter-wrap">
+              <span id="wordCount">0 words</span>
+              <span id="charCount">0 chars</span>
+            </div>
+          </div>
+
+          <label class="sr-only" for="notesInput">Study notes</label>
+          <textarea
+            id="notesInput"
+            placeholder="Paste your class notes, textbook paragraph, or article here. You can also upload a PDF below."
+          ></textarea>
+
+          <div class="upload-row">
+            <label class="upload-field" for="pdfInput">
+              <span class="upload-title">Upload notes as PDF</span>
+              <span class="upload-subtitle">The app will extract text and summarize it for revision.</span>
+            </label>
+            <input id="pdfInput" type="file" accept="application/pdf" />
+            <p id="fileStatus" class="file-status">No PDF selected.</p>
+          </div>
+
+          <div class="action-row">
+            <button id="summarizeButton" class="primary-button">
+              Summarize notes
+            </button>
+            <p id="statusMessage" class="status-message">
+              Ready when you are.
+            </p>
+          </div>
+        </section>
+
+        <section class="panel output-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Step 2</p>
+              <h2>Your revision pack</h2>
+            </div>
+            <div class="output-actions">
+              <button id="copyAllButton" class="ghost-button" disabled>
+                Copy all
+              </button>
+              <button id="downloadButton" class="ghost-button" disabled>
+                Download
+              </button>
+            </div>
+          </div>
+
+          <div id="emptyState" class="empty-state">
+            <h3>Nothing summarized yet</h3>
+            <p>
+              Your summary, bullet points, and easy explanation will show up
+              here after you process your notes.
+            </p>
+          </div>
+
+          <div id="results" class="results hidden">
+            <div class="result-card accent-summary">
+              <p class="result-label">Quick summary</p>
+              <p id="summaryOutput" class="result-copy"></p>
+            </div>
+
+            <div class="result-grid">
+              <article class="result-card accent-points">
+                <p class="result-label">Key points</p>
+                <ul id="keyPointsOutput" class="result-list"></ul>
+              </article>
+
+              <article class="result-card accent-simple">
+                <p class="result-label">Explain like I'm 10</p>
+                <p id="simpleOutput" class="result-copy"></p>
+              </article>
+            </div>
+
+            <article class="result-card accent-tips">
+              <p class="result-label">Study smarter</p>
+              <ul id="tipsOutput" class="result-list"></ul>
+            </article>
+
+            <p id="modeBadge" class="mode-badge"></p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

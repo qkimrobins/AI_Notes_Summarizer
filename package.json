@@ -1,0 +1,23 @@
+{
+  "name": "ai-notes-summarizer",
+  "version": "1.0.0",
+  "description": "Student-first web app for summarizing notes into revision-ready outputs.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "notes",
+    "summarizer",
+    "student",
+    "openai",
+    "education"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1",
+    "pdf-parse": "^2.4.5"
+  }
+}

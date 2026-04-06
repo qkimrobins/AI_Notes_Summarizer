@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Revision Pack</title>
+
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+  <div class="page-shell">
+
+    <section class="panel output-panel">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">Step 2</p>
+          <h2>Your revision pack</h2>
+        </div>
+      </div>
+
+      <div id="emptyState" class="empty-state">
+        <h3>Nothing summarized yet</h3>
+        <p>Your results will appear here.</p>
+      </div>
+
+      <div id="results" class="results hidden">
+        <div class="result-card accent-summary">
+          <p class="result-label">Quick summary</p>
+          <p id="summaryOutput" class="result-copy"></p>
+        </div>
+
+        <div class="result-grid">
+          <article class="result-card accent-points">
+            <p class="result-label">Key points</p>
+            <ul id="keyPointsOutput" class="result-list"></ul>
+          </article>
+
+          <article class="result-card accent-simple">
+            <p class="result-label">Explain like I'm 10</p>
+            <p id="simpleOutput" class="result-copy"></p>
+          </article>
+        </div>
+
+        <article class="result-card accent-tips">
+          <p class="result-label">Study smarter</p>
+          <ul id="tipsOutput" class="result-list"></ul>
+        </article>
+
+        <p id="modeBadge" class="mode-badge"></p>
+      </div>
+
+      <div style="text-align:center; margin-top:20px;">
+        <button onclick="goBack()" class="primary-button">⬅ Back</button>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- ✅ FIXED SCRIPT (runs AFTER DOM) -->
+  <script>
+    const data = JSON.parse(localStorage.getItem("summaryData"));
+
+    const emptyState = document.getElementById("emptyState");
+    const results = document.getElementById("results");
+
+    if (!data) {
+      emptyState.classList.remove("hidden");
+    } else {
+      emptyState.classList.add("hidden");
+      results.classList.remove("hidden");
+
+      // Summary
+      document.getElementById("summaryOutput").textContent = data.summary;
+
+      // Simple Explanation
+      document.getElementById("simpleOutput").textContent = data.simpleExplanation;
+
+      // Key Points
+      const keyList = document.getElementById("keyPointsOutput");
+      keyList.innerHTML = "";
+      data.keyPoints.forEach(point => {
+        const li = document.createElement("li");
+        li.textContent = point;
+        keyList.appendChild(li);
+      });
+
+      // Study Tips
+      const tipsList = document.getElementById("tipsOutput");
+      tipsList.innerHTML = "";
+      data.studyTips.forEach(tip => {
+        const li = document.createElement("li");
+        li.textContent = tip;
+        tipsList.appendChild(li);
+      });
+
+      // Mode Badge
+      document.getElementById("modeBadge").textContent =
+        data.mode === "ai"
+          ? "AI Generated Summary"
+          : "Fallback Summary Mode";
+    }
+
+    function goBack() {
+      window.location.href = "/";
+    }
+  </script>
+
+</body>
+</html>
