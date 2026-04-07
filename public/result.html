@@ -10,12 +10,14 @@
 
 <body>
   <div class="page-shell">
-
     <section class="panel output-panel">
       <div class="panel-head">
         <div>
           <p class="panel-kicker">Step 2</p>
           <h2>Your revision pack</h2>
+          <p class="panel-description">
+            A fuller breakdown of what your notes are saying, why the topic matters, and what to revise first.
+          </p>
         </div>
       </div>
 
@@ -25,25 +27,64 @@
       </div>
 
       <div id="results" class="results hidden">
+        <section class="result-overview">
+          <div>
+            <p class="result-overview-label">What this pack covers</p>
+            <h3 id="overviewTitle">A guided explanation of your notes</h3>
+            <p id="overviewText" class="result-copy"></p>
+          </div>
+          <div id="insightChips" class="insight-chips"></div>
+        </section>
+
         <div class="result-card accent-summary">
-          <p class="result-label">Quick summary</p>
+          <p class="result-label">Detailed summary</p>
+          <p class="result-helper">
+            Read this first for the big picture, then use the sections below to lock in the important details.
+          </p>
           <p id="summaryOutput" class="result-copy"></p>
         </div>
 
         <div class="result-grid">
           <article class="result-card accent-points">
             <p class="result-label">Key points</p>
+            <p class="result-helper">
+              These are the most exam-relevant ideas, definitions, and relationships pulled from your notes.
+            </p>
             <ul id="keyPointsOutput" class="result-list"></ul>
           </article>
 
           <article class="result-card accent-simple">
             <p class="result-label">Explain like I'm 10</p>
+            <p class="result-helper">
+              A simpler version to help you understand the topic before you try to memorize it.
+            </p>
             <p id="simpleOutput" class="result-copy"></p>
+          </article>
+        </div>
+
+        <div class="result-grid detail-grid">
+          <article class="result-card accent-breakdown">
+            <p class="result-label">Content breakdown</p>
+            <p class="result-helper">
+              A quick snapshot of how much material was processed and how dense the topic looks.
+            </p>
+            <dl id="breakdownOutput" class="detail-list"></dl>
+          </article>
+
+          <article class="result-card accent-focus">
+            <p class="result-label">Best focus areas</p>
+            <p class="result-helper">
+              Use these as your first revision targets before going back to the full notes.
+            </p>
+            <ul id="focusOutput" class="result-list"></ul>
           </article>
         </div>
 
         <article class="result-card accent-tips">
           <p class="result-label">Study smarter</p>
+          <p class="result-helper">
+            Practical ways to turn this summary into active revision instead of passive rereading.
+          </p>
           <ul id="tipsOutput" class="result-list"></ul>
         </article>
 
@@ -51,13 +92,11 @@
       </div>
 
       <div style="text-align:center; margin-top:20px;">
-        <button onclick="goBack()" class="primary-button">⬅ Back</button>
+        <button onclick="goBack()" class="primary-button">Back</button>
       </div>
-
     </section>
   </div>
 
-  <!-- ✅ FIXED SCRIPT (runs AFTER DOM) -->
   <script>
     const data = JSON.parse(localStorage.getItem("summaryData"));
 
@@ -70,39 +109,131 @@
       emptyState.classList.add("hidden");
       results.classList.remove("hidden");
 
-      // Summary
-      document.getElementById("summaryOutput").textContent = data.summary;
+      const summaryText = data.summary || "";
+      const keyPoints = Array.isArray(data.keyPoints) ? data.keyPoints : [];
+      const studyTips = Array.isArray(data.studyTips) ? data.studyTips : [];
+      const simpleExplanation = data.simpleExplanation || "";
+      const sourceWordCount = data.metadata?.wordCount || 0;
+      const summaryWordCount = countWords(summaryText);
+      const readTime = Math.max(1, Math.round(sourceWordCount / 200));
+      const summarySentences = splitIntoSentences(summaryText);
+      const overviewText = summarySentences.length > 1
+        ? `${summarySentences[0]} ${summarySentences[1]}`
+        : (summaryText || "Your notes have been organized into a clearer revision pack.");
 
-      // Simple Explanation
-      document.getElementById("simpleOutput").textContent = data.simpleExplanation;
+      document.getElementById("overviewText").textContent = overviewText;
 
-      // Key Points
+      const titleSeed = keyPoints[0] || summarySentences[0] || "your topic";
+      document.getElementById("overviewTitle").textContent =
+        `A clearer look at ${trimForTitle(titleSeed)}`;
+
+      renderInsightChips(document.getElementById("insightChips"), [
+        `${sourceWordCount.toLocaleString()} source words`,
+        `${keyPoints.length} key revision points`,
+        `${studyTips.length} study actions`,
+        `${readTime} min source read`
+      ]);
+
+      document.getElementById("summaryOutput").textContent = summaryText;
+      document.getElementById("simpleOutput").textContent = simpleExplanation;
+
       const keyList = document.getElementById("keyPointsOutput");
       keyList.innerHTML = "";
-      data.keyPoints.forEach(point => {
+      keyPoints.forEach((point) => {
         const li = document.createElement("li");
         li.textContent = point;
         keyList.appendChild(li);
       });
 
-      // Study Tips
       const tipsList = document.getElementById("tipsOutput");
       tipsList.innerHTML = "";
-      data.studyTips.forEach(tip => {
+      studyTips.forEach((tip) => {
         const li = document.createElement("li");
         li.textContent = tip;
         tipsList.appendChild(li);
       });
 
-      // Mode Badge
+      const breakdownList = document.getElementById("breakdownOutput");
+      breakdownList.innerHTML = "";
+      renderBreakdownItem(breakdownList, "Source length", `${sourceWordCount.toLocaleString()} words`);
+      renderBreakdownItem(breakdownList, "Summary length", `${summaryWordCount.toLocaleString()} words`);
+      renderBreakdownItem(breakdownList, "Coverage", keyPoints.length >= 5 ? "Broad topic coverage" : "Focused topic coverage");
+      renderBreakdownItem(breakdownList, "Difficulty feel", sourceWordCount > 350 ? "Dense notes, best revised in chunks" : "Moderate notes, suited to one-pass review");
+
+      const focusList = document.getElementById("focusOutput");
+      focusList.innerHTML = "";
+      buildFocusAreas(keyPoints, summarySentences, simpleExplanation).forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        focusList.appendChild(li);
+      });
+
       document.getElementById("modeBadge").textContent =
         data.mode === "ai"
-          ? "AI Generated Summary"
-          : "Fallback Summary Mode";
+          ? "AI-generated revision pack"
+          : "Local summary mode";
     }
 
     function goBack() {
       window.location.href = "/";
+    }
+
+    function countWords(text) {
+      return text.trim().split(/\s+/).filter(Boolean).length;
+    }
+
+    function splitIntoSentences(text) {
+      return text
+        .split(/(?<=[.!?])\s+/)
+        .map((sentence) => sentence.trim())
+        .filter(Boolean);
+    }
+
+    function trimForTitle(text) {
+      const cleaned = text.replace(/[.?!]+$/, "").trim();
+      if (cleaned.length <= 60) return cleaned;
+      return `${cleaned.slice(0, 57).trim()}...`;
+    }
+
+    function renderInsightChips(container, items) {
+      container.innerHTML = "";
+      items.forEach((item) => {
+        const chip = document.createElement("span");
+        chip.className = "insight-chip";
+        chip.textContent = item;
+        container.appendChild(chip);
+      });
+    }
+
+    function renderBreakdownItem(container, label, value) {
+      const term = document.createElement("dt");
+      term.textContent = label;
+      const description = document.createElement("dd");
+      description.textContent = value;
+      container.appendChild(term);
+      container.appendChild(description);
+    }
+
+    function buildFocusAreas(keyPoints, summarySentences, simpleExplanation) {
+      const focusAreas = [];
+
+      if (keyPoints[0]) {
+        focusAreas.push(`Start with this core idea: ${keyPoints[0]}`);
+      }
+
+      if (keyPoints[1]) {
+        focusAreas.push(`Next, make sure you can explain this in your own words: ${keyPoints[1]}`);
+      }
+
+      if (summarySentences[0]) {
+        focusAreas.push(`Use the main summary to understand the wider context: ${summarySentences[0]}`);
+      }
+
+      if (simpleExplanation) {
+        focusAreas.push("Finish by revising the simple explanation out loud to check that the topic really makes sense.");
+      }
+
+      return focusAreas.slice(0, 4);
     }
   </script>
 
