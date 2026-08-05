@@ -62,6 +62,48 @@
           </article>
         </div>
 
+        <div class="result-grid">
+          <article class="result-card accent-terms">
+            <p class="result-label">Key terms</p>
+            <p class="result-helper">
+              Glossary entries pulled straight from your notes — know these before you move on.
+            </p>
+            <dl id="termsOutput" class="glossary-list"></dl>
+          </article>
+
+          <article class="result-card accent-sticky">
+            <p class="result-label">Sticky notes</p>
+            <p class="result-helper">
+              Tiny one-line reminders for a last-minute scan before the exam.
+            </p>
+            <div id="stickyOutput" class="sticky-wall"></div>
+          </article>
+        </div>
+
+        <article class="result-card accent-flashcards">
+          <p class="result-label">Flashcards</p>
+          <p class="result-helper">
+            Tap a card to flip it. Say the answer out loud before checking the back.
+          </p>
+          <div id="flashcardsOutput" class="flashcard-grid"></div>
+        </article>
+
+        <article class="result-card accent-quiz">
+          <p class="result-label">Quiz</p>
+          <p class="result-helper">
+            Test yourself. Pick an answer and the pack will check it instantly.
+          </p>
+          <div id="quizOutput" class="quiz-list"></div>
+        </article>
+
+        <article class="result-card accent-map">
+          <p class="result-label">Concept map</p>
+          <p class="result-helper">
+            How the main topic connects to its core ideas. Explain it and you know it.
+          </p>
+          <div id="conceptOutput" class="concept-map"></div>
+        </article>
+
         <div class="result-grid detail-grid">
           <article class="result-card accent-breakdown">
             <p class="result-label">Content breakdown</p>
@@ -109,10 +151,16 @@
       emptyState.classList.add("hidden");
       results.classList.remove("hidden");
 
+      const title = data.title || "";
       const summaryText = data.summary || "";
       const keyPoints = Array.isArray(data.keyPoints) ? data.keyPoints : [];
       const studyTips = Array.isArray(data.studyTips) ? data.studyTips : [];
       const simpleExplanation = data.simpleExplanation || "";
+      const keyTerms = Array.isArray(data.keyTerms) ? data.keyTerms : [];
+      const flashcards = Array.isArray(data.flashcards) ? data.flashcards : [];
+      const quiz = Array.isArray(data.quiz) ? data.quiz : [];
+      const conceptMap = data.conceptMap;
+      const stickyNotes = Array.isArray(data.stickyNotes) ? data.stickyNotes : [];
       const sourceWordCount = data.metadata?.wordCount || 0;
       const summaryWordCount = countWords(summaryText);
       const readTime = Math.max(1, Math.round(sourceWordCount / 200));
@@ -121,17 +169,14 @@
         ? `${summarySentences[0]} ${summarySentences[1]}`
         : (summaryText || "Your notes have been organized into a clearer revision pack.");
 
+      document.getElementById("overviewTitle").textContent = title || "A clearer look at your notes";
       document.getElementById("overviewText").textContent = overviewText;
-
-      const titleSeed = keyPoints[0] || summarySentences[0] || "your topic";
-      document.getElementById("overviewTitle").textContent =
-        `A clearer look at ${trimForTitle(titleSeed)}`;
 
       renderInsightChips(document.getElementById("insightChips"), [
         `${sourceWordCount.toLocaleString()} source words`,
         `${keyPoints.length} key revision points`,
-        `${studyTips.length} study actions`,
-        `${readTime} min source read`
+        `${flashcards.length} flashcards`,
+        `${quiz.length} quiz questions`
       ]);
 
       document.getElementById("summaryOutput").textContent = summaryText;
@@ -152,6 +197,12 @@
         li.textContent = tip;
         tipsList.appendChild(li);
       });
+
+      renderGlossary(document.getElementById("termsOutput"), keyTerms);
+      renderStickyNotes(document.getElementById("stickyOutput"), stickyNotes);
+      renderFlashcards(document.getElementById("flashcardsOutput"), flashcards);
+      renderQuiz(document.getElementById("quizOutput"), quiz);
+      renderConceptMap(document.getElementById("conceptOutput"), conceptMap);
 
       const breakdownList = document.getElementById("breakdownOutput");
       breakdownList.innerHTML = "";
@@ -187,12 +238,6 @@
         .split(/(?<=[.!?])\s+/)
         .map((sentence) => sentence.trim())
         .filter(Boolean);
-    }
-
-    function trimForTitle(text) {
-      const cleaned = text.replace(/[.?!]+$/, "").trim();
-      if (cleaned.length <= 60) return cleaned;
-      return `${cleaned.slice(0, 57).trim()}...`;
     }
 
     function renderInsightChips(container, items) {
@@ -234,6 +279,164 @@
       }
 
       return focusAreas.slice(0, 4);
+    }
+
+    function renderGlossary(container, keyTerms) {
+      container.innerHTML = "";
+      if (keyTerms.length === 0) {
+        container.textContent = "No glossary terms were extracted from these notes.";
+        return;
+      }
+      keyTerms.forEach((entry) => {
+        const term = document.createElement("dt");
+        term.textContent = entry.term || "";
+        const definition = document.createElement("dd");
+        definition.textContent = entry.definition || "";
+        container.appendChild(term);
+        container.appendChild(definition);
+      });
+    }
+
+    function renderStickyNotes(container, stickyNotes) {
+      container.innerHTML = "";
+      if (stickyNotes.length === 0) {
+        container.textContent = "No sticky-note reminders were generated for these notes.";
+        return;
+      }
+      stickyNotes.forEach((note) => {
+        const noteEl = document.createElement("div");
+        noteEl.className = "sticky-note";
+        noteEl.textContent = note;
+        container.appendChild(noteEl);
+      });
+    }
+
+    function renderFlashcards(container, flashcards) {
+      container.innerHTML = "";
+      if (flashcards.length === 0) {
+        container.textContent = "No flashcards were generated for these notes.";
+        return;
+      }
+      flashcards.forEach((card) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "flashcard";
+        wrapper.setAttribute("role", "button");
+        wrapper.setAttribute("tabindex", "0");
+        wrapper.setAttribute("aria-label", "Flashcard. Press Enter to flip.");
+
+        const toggle = () => wrapper.classList.toggle("is-flipped");
+        wrapper.addEventListener("click", toggle);
+        wrapper.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            toggle();
+          }
+        });
+
+        const inner = document.createElement("div");
+        inner.className = "flashcard-inner";
+
+        const front = document.createElement("div");
+        front.className = "flashcard-face flashcard-front";
+        front.textContent = card.front;
+
+        const back = document.createElement("div");
+        back.className = "flashcard-face flashcard-back";
+        back.textContent = card.back;
+
+        inner.appendChild(front);
+        inner.appendChild(back);
+        wrapper.appendChild(inner);
+        container.appendChild(wrapper);
+      });
+    }
+
+    function renderQuiz(container, questions) {
+      container.innerHTML = "";
+      if (questions.length === 0) {
+        container.textContent = "No quiz questions were generated for these notes.";
+        return;
+      }
+      questions.forEach((question, questionIndex) => {
+        const item = document.createElement("div");
+        item.className = "quiz-item";
+
+        const prompt = document.createElement("p");
+        prompt.className = "quiz-question";
+        prompt.textContent = `${questionIndex + 1}. ${question.question}`;
+
+        const optionsWrap = document.createElement("div");
+        optionsWrap.className = "quiz-options";
+
+        (question.options || []).forEach((option, optionIndex) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "quiz-option";
+          button.textContent = option;
+          button.addEventListener("click", () => {
+            const correct = optionIndex === question.answerIndex;
+            Array.from(optionsWrap.children).forEach((optionButton, index) => {
+              optionButton.classList.add("quiz-revealed");
+              optionButton.classList.toggle("quiz-correct", index === question.answerIndex);
+              optionButton.classList.toggle("quiz-wrong", index === optionIndex && !correct);
+              optionButton.disabled = true;
+            });
+
+            const explanation = document.createElement("p");
+            explanation.className = "quiz-explanation";
+            explanation.textContent = (correct ? "Correct! " : "Not quite. ") + (question.explanation || "");
+            item.appendChild(explanation);
+          });
+          optionsWrap.appendChild(button);
+        });
+
+        item.appendChild(prompt);
+        item.appendChild(optionsWrap);
+        container.appendChild(item);
+      });
+    }
+
+    function renderConceptMap(container, conceptMap) {
+      container.innerHTML = "";
+      if (!conceptMap || !conceptMap.central) {
+        container.textContent = "No concept map was generated for these notes.";
+        return;
+      }
+
+      const central = document.createElement("div");
+      central.className = "concept-central";
+      central.textContent = conceptMap.central;
+
+      const branch = document.createElement("div");
+      branch.className = "concept-branch";
+
+      const nodeById = new Map();
+      (conceptMap.nodes || []).forEach((node) => nodeById.set(node.id, node));
+
+      (conceptMap.links || []).forEach((link) => {
+        const target = nodeById.get(link.target);
+        if (!target) return;
+
+        const row = document.createElement("div");
+        row.className = "concept-row";
+
+        const linkLabel = document.createElement("span");
+        linkLabel.className = "concept-link-label";
+        linkLabel.textContent = link.label || "related to";
+
+        const nodeEl = document.createElement("span");
+        nodeEl.className = "concept-node";
+        nodeEl.textContent = target.label || target.id;
+
+        row.appendChild(linkLabel);
+        row.appendChild(nodeEl);
+        branch.appendChild(row);
+      });
+
+      container.appendChild(central);
+      if (branch.childNodes.length > 0) {
+        container.appendChild(branch);
+      }
     }
   </script>
 

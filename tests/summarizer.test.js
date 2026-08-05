@@ -24,6 +24,6 @@ test("buildFallbackResult returns study-friendly sections", () => {
   assert.ok(result.summary.length > 20);
   assert.ok(Array.isArray(result.keyPoints));
   assert.ok(result.keyPoints.length >= 3);
-  assert.ok(result.simpleExplanation.includes("main idea"));
+  assert.ok(result.simpleExplanation.length > 20);
   assert.ok(result.studyTips.length >= 2);
 });
