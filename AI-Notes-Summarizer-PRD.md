@@ -2,20 +2,20 @@
 
 ---
 
-## 🧠 1. Product Overview
+## 1. Product Overview
 
 **Product Name:** AI Notes Summarizer
 **Platform:** Web Application (Phase 1)
 
-### 🎯 Target Users:
+### Target Users:
 - Students (school + college)
 - Content learners
 - Exam preparation users
 
-### ❗ Problem Statement:
+### Problem Statement:
 Students spend too much time reading long notes and struggle to extract key information efficiently.
 
-### 💡 Solution:
+### Solution:
 An AI-powered web app that converts long notes into:
 - Concise summaries
 - Key bullet points
@@ -23,33 +23,33 @@ An AI-powered web app that converts long notes into:
 
 ---
 
-## 🎯 2. Objectives
+## 2. Objectives
 
-### 🚀 Primary Goals:
+### Primary Goals:
 - Reduce study time
 - Improve understanding of complex topics
 - Provide quick revision material
 
-### 📊 Success Metrics:
+### Success Metrics:
 - ⏱️ Time saved per session
 - 📈 User engagement (daily usage)
 - ⭐ User satisfaction (feedback rating)
 
 ---
 
-## 👥 3. Target Audience
+## 3. Target Audience
 
-### 👨‍🎓 Students
+### Students
 - Need quick revision before exams
 - Want simplified explanations
 
-### 📚 Self-Learners
+### Self-Learners
 - Consume long-form content
 - Prefer summarized insights
 
 ---
 
-## ✨ 4. Core Features (MVP)
+## 4. Core Features (MVP)
 
 ### 🔹 4.1 Text Summarization
 - Input: Paste text (notes, articles)
@@ -74,7 +74,7 @@ An AI-powered web app that converts long notes into:
 
 ---
 
-## 🚀 5. Advanced Features (Phase 2)
+## 5. Advanced Features (Phase 2)
 
 - 📄 PDF / DOC Upload
 - 🧠 Flashcard Generation
@@ -85,7 +85,7 @@ An AI-powered web app that converts long notes into:
 
 ---
 
-## 🏗️ 6. Technical Architecture
+## 6. Technical Architecture
 
 ### 🔹 Frontend:
 - HTML/CSS/JavaScript OR React
@@ -103,7 +103,7 @@ An AI-powered web app that converts long notes into:
 
 ---
 
-## 🔄 7. User Flow
+## 7. User Flow
 
 1. User opens website
 2. Pastes notes / uploads file
@@ -117,38 +117,38 @@ An AI-powered web app that converts long notes into:
 
 ---
 
-## 🧩 8. Functional Requirements
+## 8. Functional Requirements
 
-### 📥 Input:
+### Input:
 - Text input (min 50 words, max limit configurable)
 
-### ⚙️ Processing:
+### Processing:
 - Send request to AI API
 - Generate:
   - Summary
   - Bullet points
   - Simplified explanation
 
-### 📤 Output:
+### Output:
 - Display formatted results
 - Copy/download option
 
 ---
 
-## 🎨 9. UI/UX Requirements
+## 9. UI/UX Requirements
 
-### 🎯 Design Goals:
+### Design Goals:
 - Minimal and clean
 - Fast interaction
 - Mobile-friendly
 
-### 📱 Screens:
+### Screens:
 - Home Screen (input + button)
 - Output Screen (results)
 
 ---
 
-## 🔐 10. Non-Functional Requirements
+## 10. Non-Functional Requirements
 
 - ⚡ Fast response time (<5 sec)
 - 🔒 Secure API handling
@@ -157,7 +157,7 @@ An AI-powered web app that converts long notes into:
 
 ---
 
-## ⚠️ 11. Constraints
+## 11. Constraints
 
 - API usage cost (OpenAI pricing)
 - Internet dependency
@@ -165,36 +165,17 @@ An AI-powered web app that converts long notes into:
 
 ---
 
-## 🧪 12. Testing Strategy
+## 12. Testing Strategy
 
 - Unit testing (API responses)
 - UI testing (input/output flow)
 
-### 🧩 Edge Cases:
+### Edge Cases:
 - Empty input
 - Very large text
 - API failure
 
 ---
 
-## 🗺️ 13. Future Scope
-
-- Mobile app (Android/iOS)
-- Integration with note-taking apps
-- AI-powered study planner
-- Personalized learning assistant
 
 ---
-
-## 📦 14. Deliverables
-
-- GitHub repository
-- README with:
-  - Features
-  - Screenshots
-  - Setup instructions
-- Live demo link
-
----
-
-## 💡 15. Naming Suggestion for GitHub
