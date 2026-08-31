@@ -1,147 +1,404 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Your Revision Pack</title>
+  <title>Revision Pack - AI Notes Summarizer</title>
+  <meta name="description" content="Interactive revision pack with summaries, Google search fact-checks, exam traps, 3D flashcards, active recall quizzes, and concept mindmaps." />
 
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+    <link rel="icon" type="image/jpeg" href="/ssr.jpeg" />
+    <link rel="stylesheet" href="/styles.css" />
 </head>
 
 <body>
   <div class="page-shell">
-    <section class="panel output-panel">
-      <div class="panel-head">
-        <div>
-          <p class="panel-kicker">Step 2</p>
-          <h2>Your revision pack</h2>
-          <p class="panel-description">
-            A fuller breakdown of what your notes are saying, why the topic matters, and what to revise first.
-          </p>
-        </div>
+    <!-- Top Action Navigation Header -->
+    <header class="result-header-bar">
+      <div class="header-left-actions">
+        <a href="/" class="back-link-btn">
+          <img src="/ssr.jpeg" alt="Logo" style="width:22px; height:22px; border-radius:6px; object-fit:cover;" />
+          <span>Back to Studio</span>
+        </a>
+        <span id="modeBadge" class="mode-badge-pill">Revision Pack</span>
       </div>
 
-      <div id="emptyState" class="empty-state">
-        <h3>Nothing summarized yet</h3>
-        <p>Your results will appear here.</p>
-      </div>
+      <div class="header-right-actions">
+        <button id="copyPackBtn" class="ghost-btn" title="Copy formatted revision notes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span>Copy Pack</span>
+        </button>
 
-      <div id="results" class="results hidden">
-        <section class="result-overview">
-          <div>
-            <p class="result-overview-label">What this pack covers</p>
-            <h3 id="overviewTitle">A guided explanation of your notes</h3>
-            <p id="overviewText" class="result-copy"></p>
+        <button id="downloadMdBtn" class="ghost-btn" title="Download Markdown file">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Export .md</span>
+        </button>
+
+        <button id="printBtn" class="ghost-btn" title="Print revision sheet or save as PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          <span>Print Sheet</span>
+        </button>
+
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle light and dark theme">
+          <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="panel empty-state hidden" style="text-align: center; padding: 60px 20px;">
+      <div style="font-size: 3rem; margin-bottom: 16px;">📚</div>
+      <h2 style="font-size: 1.8rem; margin-bottom: 10px;">No Revision Pack Found</h2>
+      <p style="color: var(--text-secondary); max-width: 44ch; margin: 0 auto 24px;">
+        You haven't summarized any notes yet. Paste your study material or research a topic to generate your pack.
+      </p>
+      <a href="/" class="primary-btn" style="text-decoration: none; display: inline-flex;">
+        <span>Go to Studio</span>
+      </a>
+    </div>
+
+    <!-- Results Container -->
+    <main id="results" class="hidden">
+      <!-- Quick Metric Stats Dashboard -->
+      <section class="metrics-dashboard">
+        <div class="stat-card">
+          <div class="stat-icon-wrap icon-blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
           </div>
-          <div id="insightChips" class="insight-chips"></div>
-        </section>
+          <div class="stat-content">
+            <span id="statReadTime" class="stat-value">2 min</span>
+            <span class="stat-label">Est. Revision Time</span>
+          </div>
+        </div>
 
-        <div class="result-card accent-summary">
-          <p class="result-label">Detailed summary</p>
-          <p class="result-helper">
-            Read this first for the big picture, then use the sections below to lock in the important details.
+        <div class="stat-card">
+          <div class="stat-icon-wrap icon-cyan">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span id="statGrounding" class="stat-value">4 Sources</span>
+            <span class="stat-label">Google Fact-Checks</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrap icon-purple">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span id="statFlashcards" class="stat-value">6 Cards</span>
+            <span class="stat-label">3D Flashcards</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrap icon-emerald">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span id="statQuiz" class="stat-value">4 Qs</span>
+            <span class="stat-label">Quiz Self-Check</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Search Bar inside Revision Pack -->
+      <section class="live-search-container">
+        <div class="live-search-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+        <input
+          type="text"
+          id="inPackSearchInput"
+          class="live-search-input"
+          placeholder="Look up any term, formula, or question on Google Search for fast fact-checking..."
+        />
+        <button type="button" id="inPackSearchBtn" class="live-search-btn">Search Google</button>
+      </section>
+      <div id="liveSearchResultsBox" class="panel hidden" style="margin-bottom: 24px; padding: 20px;"></div>
+
+      <!-- View Filter Tab Pills -->
+      <nav class="filter-tabs-bar" aria-label="Filter study views">
+        <button type="button" class="filter-tab-btn active" data-filter="all">🌟 All Sections</button>
+        <button type="button" class="filter-tab-btn" data-filter="summary">📖 Summary & ELI10</button>
+        <button type="button" class="filter-tab-btn" data-filter="grounding">🔍 Google Fact-Checks</button>
+        <button type="button" class="filter-tab-btn" data-filter="traps">⚠️ Exam Traps</button>
+        <button type="button" class="filter-tab-btn" data-filter="apps">🌐 Real-World Apps</button>
+        <button type="button" class="filter-tab-btn" data-filter="flashcards">🎴 Flashcards</button>
+        <button type="button" class="filter-tab-btn" data-filter="quiz">❓ Quiz</button>
+        <button type="button" class="filter-tab-btn" data-filter="mindmap">🗺️ Concept Map</button>
+        <button type="button" class="filter-tab-btn" data-filter="glossary">📋 Cheat-Sheet & Glossary</button>
+      </nav>
+
+      <!-- Overview Header Banner -->
+      <section class="result-overview-card section-summary">
+        <div class="overview-top-row">
+          <div>
+            <p class="pack-kicker">Topic Overview</p>
+            <h1 id="overviewTitle" class="gradient-text">Study Notes Revision Pack</h1>
+          </div>
+          <div id="insightChips" class="insight-chips-wrap"></div>
+        </div>
+        <p id="overviewText" class="result-copy-body" style="color: var(--text-secondary);"></p>
+      </section>
+
+      <!-- Main Results Grid -->
+      <div class="results-grid-layout">
+        <!-- Detailed Summary -->
+        <article class="result-card col-12 section-summary" id="sec-summary">
+          <div class="card-header-bar">
+            <span class="card-tag tag-indigo">Executive Summary</span>
+            <button type="button" class="ghost-btn" id="copySummaryBtn" style="padding: 4px 12px; font-size: 0.8rem;">Copy</button>
+          </div>
+          <p class="card-helper-text">
+            Read this narrative first to build a solid mental model before moving into drill questions.
           </p>
-          <p id="summaryOutput" class="result-copy"></p>
-        </div>
+          <p id="summaryOutput" class="result-copy-body"></p>
+        </article>
 
-        <div class="result-grid">
-          <article class="result-card accent-points">
-            <p class="result-label">Key points</p>
-            <p class="result-helper">
-              These are the most exam-relevant ideas, definitions, and relationships pulled from your notes.
-            </p>
-            <ul id="keyPointsOutput" class="result-list"></ul>
-          </article>
+        <!-- Google Search Grounding & Fact Checks -->
+        <article class="result-card col-12 section-grounding" id="sec-grounding">
+          <div class="card-header-bar">
+            <span class="card-tag tag-google">🔍 Google Search Fact-Checks & Verified Grounding</span>
+          </div>
+          <p class="card-helper-text">
+            Precise, verified extracts pulled via live search cross-referencing. Click any item to explore deeper on Google.
+          </p>
+          <div id="groundingOutput" class="grounding-grid"></div>
+        </article>
 
-          <article class="result-card accent-simple">
-            <p class="result-label">Explain like I'm 10</p>
-            <p class="result-helper">
-              A simpler version to help you understand the topic before you try to memorize it.
-            </p>
-            <p id="simpleOutput" class="result-copy"></p>
-          </article>
-        </div>
+        <!-- Key Points Checklist -->
+        <article class="result-card col-8 section-points" id="sec-points">
+          <div class="card-header-bar">
+            <span class="card-tag tag-emerald">Key Exam Points</span>
+            <button type="button" class="ghost-btn" id="copyPointsBtn" style="padding: 4px 12px; font-size: 0.8rem;">Copy</button>
+          </div>
+          <p class="card-helper-text">
+            High-yield ideas, core principles, and definitions extracted directly from your material.
+          </p>
+          <ul id="keyPointsOutput" class="key-points-list"></ul>
+        </article>
 
-        <div class="result-grid">
-          <article class="result-card accent-terms">
-            <p class="result-label">Key terms</p>
-            <p class="result-helper">
-              Glossary entries pulled straight from your notes — know these before you move on.
-            </p>
-            <dl id="termsOutput" class="glossary-list"></dl>
-          </article>
+        <!-- Explain Like I'm 10 (ELI10) -->
+        <article class="result-card col-4 section-summary" id="sec-eli10">
+          <div class="card-header-bar">
+            <span class="card-tag tag-cyan">ELI10 Analogy</span>
+          </div>
+          <p class="card-helper-text">
+            A simple, intuition-first analogy to make the topic stick effortlessly.
+          </p>
+          <div class="eli10-bubble">
+            <div class="eli10-avatar">🤖</div>
+            <div id="simpleOutput" class="eli10-content"></div>
+          </div>
+        </article>
 
-          <article class="result-card accent-sticky">
-            <p class="result-label">Sticky notes</p>
-            <p class="result-helper">
-              Tiny one-line reminders for a last-minute scan before the exam.
-            </p>
-            <div id="stickyOutput" class="sticky-wall"></div>
-          </article>
-        </div>
+        <!-- Common Misconceptions & Exam Traps -->
+        <article class="result-card col-12 section-traps" id="sec-traps">
+          <div class="card-header-bar">
+            <span class="card-tag tag-rose">⚠️ Common Exam Pitfalls & Misconceptions</span>
+          </div>
+          <p class="card-helper-text">
+            Frequent points of confusion and subtle exam traps that trip students up.
+          </p>
+          <div id="misconceptionsOutput" class="misconceptions-list"></div>
+        </article>
 
-        <article class="result-card accent-flashcards">
-          <p class="result-label">Flashcards</p>
-          <p class="result-helper">
-            Tap a card to flip it. Say the answer out loud before checking the back.
+        <!-- Quick Facts Cheat-Sheet -->
+        <article class="result-card col-6 section-glossary" id="sec-cheatsheet">
+          <div class="card-header-bar">
+            <span class="card-tag tag-amber">⚡ Quick Facts & Cheat-Sheet</span>
+          </div>
+          <p class="card-helper-text">
+            High-density reference values, mechanisms, and recall priorities.
+          </p>
+          <div id="cheatSheetOutput" class="cheatsheet-grid"></div>
+        </article>
+
+        <!-- Real-World Applications -->
+        <article class="result-card col-6 section-apps" id="sec-apps">
+          <div class="card-header-bar">
+            <span class="card-tag tag-cyan">🌐 Real-World Applications & Industry Context</span>
+          </div>
+          <p class="card-helper-text">
+            How this concept is actually implemented in engineering, biotechnology, and modern technology.
+          </p>
+          <div id="appsOutput" class="apps-grid"></div>
+        </article>
+
+        <!-- Interactive 3D Flashcards -->
+        <article class="result-card col-12 section-flashcards" id="sec-flashcards">
+          <div class="card-header-bar">
+            <span class="card-tag tag-purple">3D Flashcards</span>
+            <span id="flashcardMasteryText" class="flashcard-progress-text">0 / 0 Mastered</span>
+          </div>
+          <p class="card-helper-text">
+            Click or press Enter on any card to flip. Test your active recall by stating the answer before flipping!
           </p>
           <div id="flashcardsOutput" class="flashcard-grid"></div>
         </article>
 
-        <article class="result-card accent-quiz">
-          <p class="result-label">Quiz</p>
-          <p class="result-helper">
-            Test yourself. Pick an answer and the pack will check it instantly.
+        <!-- Interactive Active Recall Quiz -->
+        <article class="result-card col-12 section-quiz" id="sec-quiz">
+          <div class="card-header-bar">
+            <span class="card-tag tag-rose">Active Recall Quiz</span>
+            <button type="button" id="resetQuizBtn" class="ghost-btn" style="padding: 4px 12px; font-size: 0.8rem;">Reset Quiz</button>
+          </div>
+          <p class="card-helper-text">
+            Multiple-choice test with immediate answer validation and conceptual explanations.
           </p>
-          <div id="quizOutput" class="quiz-list"></div>
+          <div id="quizScoreBanner" class="quiz-score-banner hidden">
+            <span id="quizScoreText" class="quiz-score-title">Score: 0 / 0</span>
+            <span style="font-size:0.85rem; color:var(--text-secondary);">Keep testing until you hit 100%!</span>
+          </div>
+          <div id="quizOutput" class="quiz-container"></div>
         </article>
 
-        <article class="result-card accent-map">
-          <p class="result-label">Concept map</p>
-          <p class="result-helper">
-            How the main topic connects to its core ideas. Explain it and you know it.
+        <!-- Concept Mindmap -->
+        <article class="result-card col-12 section-mindmap" id="sec-mindmap">
+          <div class="card-header-bar">
+            <span class="card-tag tag-cyan">Concept Mindmap</span>
+          </div>
+          <p class="card-helper-text">
+            Visual relationship graph connecting the central core subject to its key satellite concepts.
           </p>
-          <div id="conceptOutput" class="concept-map"></div>
+          <div id="conceptOutput" class="concept-map-container"></div>
         </article>
 
-        <div class="result-grid detail-grid">
-          <article class="result-card accent-breakdown">
-            <p class="result-label">Content breakdown</p>
-            <p class="result-helper">
-              A quick snapshot of how much material was processed and how dense the topic looks.
-            </p>
-            <dl id="breakdownOutput" class="detail-list"></dl>
-          </article>
-
-          <article class="result-card accent-focus">
-            <p class="result-label">Best focus areas</p>
-            <p class="result-helper">
-              Use these as your first revision targets before going back to the full notes.
-            </p>
-            <ul id="focusOutput" class="result-list"></ul>
-          </article>
-        </div>
-
-        <article class="result-card accent-tips">
-          <p class="result-label">Study smarter</p>
-          <p class="result-helper">
-            Practical ways to turn this summary into active revision instead of passive rereading.
+        <!-- Key Terms Glossary -->
+        <article class="result-card col-6 section-glossary" id="sec-terms">
+          <div class="card-header-bar">
+            <span class="card-tag tag-indigo">Glossary & Key Terms</span>
+          </div>
+          <p class="card-helper-text">
+            Essential subject terminology defined in concise, exam-ready phrases.
           </p>
-          <ul id="tipsOutput" class="result-list"></ul>
+          <div id="termsOutput" class="glossary-terms-grid"></div>
         </article>
 
-        <p id="modeBadge" class="mode-badge"></p>
+        <!-- Sticky Wall Reminders -->
+        <article class="result-card col-6 section-glossary" id="sec-sticky">
+          <div class="card-header-bar">
+            <span class="card-tag tag-amber">60-Second Sticky Notes</span>
+          </div>
+          <p class="card-helper-text">
+            Bite-sized trigger phrases for your final lightning review before tests.
+          </p>
+          <div id="stickyOutput" class="sticky-wall-grid"></div>
+        </article>
+
+        <!-- Content Breakdown & Study Plan -->
+        <article class="result-card col-6 section-points">
+          <div class="card-header-bar">
+            <span class="card-tag tag-emerald">Content Diagnostics</span>
+          </div>
+          <p class="card-helper-text">
+            Metrics snapshot of the processed material and reading volume.
+          </p>
+          <div id="breakdownOutput" class="breakdown-list"></div>
+        </article>
+
+        <!-- Study Smarter Tips -->
+        <article class="result-card col-6 section-points">
+          <div class="card-header-bar">
+            <span class="card-tag tag-amber">Study Smarter Plan</span>
+          </div>
+          <p class="card-helper-text">
+            Evidence-based active recall and spaced repetition tactics for this material.
+          </p>
+          <div id="tipsOutput" class="tips-action-list"></div>
+        </article>
       </div>
-
-      <div style="text-align:center; margin-top:20px;">
-        <button onclick="goBack()" class="primary-button">Back</button>
-      </div>
-    </section>
+    </main>
   </div>
 
-  <script>
-    const data = JSON.parse(localStorage.getItem("summaryData"));
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
 
+  <!-- Dashboard Script -->
+  <script>
+    // Theme Management
+    const savedTheme = localStorage.getItem("app_theme") || "dark";
+    document.documentElement.dataset.theme = savedTheme;
+    updateThemeIcon(savedTheme);
+
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener("click", () => {
+        const currentTheme = document.documentElement.dataset.theme || "dark";
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = newTheme;
+        localStorage.setItem("app_theme", newTheme);
+        updateThemeIcon(newTheme);
+        showToast(`Switched to ${newTheme} mode`);
+      });
+    }
+
+    function updateThemeIcon(theme) {
+      const icon = document.getElementById("themeIcon");
+      if (!icon) return;
+      if (theme === "light") {
+        icon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+      } else {
+        icon.innerHTML = `
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        `;
+      }
+    }
+
+    // Load Data
+    const rawData = localStorage.getItem("summaryData");
+    const data = rawData ? JSON.parse(rawData) : null;
     const emptyState = document.getElementById("emptyState");
     const results = document.getElementById("results");
 
@@ -151,7 +408,11 @@
       emptyState.classList.add("hidden");
       results.classList.remove("hidden");
 
-      const title = data.title || "";
+      renderDashboard(data);
+    }
+
+    function renderDashboard(data) {
+      const title = data.title || "Study Notes";
       const summaryText = data.summary || "";
       const keyPoints = Array.isArray(data.keyPoints) ? data.keyPoints : [];
       const studyTips = Array.isArray(data.studyTips) ? data.studyTips : [];
@@ -161,284 +422,782 @@
       const quiz = Array.isArray(data.quiz) ? data.quiz : [];
       const conceptMap = data.conceptMap;
       const stickyNotes = Array.isArray(data.stickyNotes) ? data.stickyNotes : [];
-      const sourceWordCount = data.metadata?.wordCount || 0;
+      const webGrounding = Array.isArray(data.webGrounding) ? data.webGrounding : [];
+      const misconceptions = Array.isArray(data.commonMisconceptions) ? data.commonMisconceptions : [];
+      const realWorldApps = Array.isArray(data.realWorldApplications) ? data.realWorldApplications : [];
+      const cheatSheet = Array.isArray(data.keyFactsCheatSheet) ? data.keyFactsCheatSheet : [];
+
+      const sourceWordCount = data.metadata?.wordCount || countWords(summaryText) * 2;
       const summaryWordCount = countWords(summaryText);
       const readTime = Math.max(1, Math.round(sourceWordCount / 200));
+
+      // Stats
+      document.getElementById("statReadTime").textContent = `${readTime} min`;
+      document.getElementById("statGrounding").textContent = `${webGrounding.length} Sources`;
+      document.getElementById("statFlashcards").textContent = `${flashcards.length} Cards`;
+      document.getElementById("statQuiz").textContent = `${quiz.length} Qs`;
+
+      // Header overview
+      document.getElementById("overviewTitle").textContent = title;
       const summarySentences = splitIntoSentences(summaryText);
       const overviewText = summarySentences.length > 1
         ? `${summarySentences[0]} ${summarySentences[1]}`
-        : (summaryText || "Your notes have been organized into a clearer revision pack.");
-
-      document.getElementById("overviewTitle").textContent = title || "A clearer look at your notes";
+        : (summaryText || "Your study topic has been organized into a grounded, comprehensive revision pack.");
       document.getElementById("overviewText").textContent = overviewText;
 
+      // Insight Chips
       renderInsightChips(document.getElementById("insightChips"), [
         `${sourceWordCount.toLocaleString()} source words`,
-        `${keyPoints.length} key revision points`,
+        `${webGrounding.length} fact-checks`,
+        `${keyPoints.length} key points`,
         `${flashcards.length} flashcards`,
         `${quiz.length} quiz questions`
       ]);
 
+      // Summary & ELI10
       document.getElementById("summaryOutput").textContent = summaryText;
       document.getElementById("simpleOutput").textContent = simpleExplanation;
 
+      // Google Grounding Cards
+      renderGroundingCards(document.getElementById("groundingOutput"), webGrounding, title);
+
+      // Exam Traps / Misconceptions
+      renderMisconceptions(document.getElementById("misconceptionsOutput"), misconceptions);
+
+      // Quick Facts / Cheat Sheet
+      renderCheatSheet(document.getElementById("cheatSheetOutput"), cheatSheet);
+
+      // Real World Applications
+      renderRealWorldApps(document.getElementById("appsOutput"), realWorldApps);
+
+      // Key Points
       const keyList = document.getElementById("keyPointsOutput");
       keyList.innerHTML = "";
-      keyPoints.forEach((point) => {
+      keyPoints.forEach((point, idx) => {
         const li = document.createElement("li");
-        li.textContent = point;
+        li.className = "key-point-item";
+        li.innerHTML = `
+          <span class="point-number">${String(idx + 1).padStart(2, "0")}</span>
+          <span class="point-text">${escapeHtml(point)}</span>
+        `;
         keyList.appendChild(li);
       });
 
-      const tipsList = document.getElementById("tipsOutput");
-      tipsList.innerHTML = "";
-      studyTips.forEach((tip) => {
-        const li = document.createElement("li");
-        li.textContent = tip;
-        tipsList.appendChild(li);
-      });
-
+      // Glossary
       renderGlossary(document.getElementById("termsOutput"), keyTerms);
+
+      // Sticky Notes
       renderStickyNotes(document.getElementById("stickyOutput"), stickyNotes);
+
+      // 3D Flashcards
       renderFlashcards(document.getElementById("flashcardsOutput"), flashcards);
+
+      // Quiz
       renderQuiz(document.getElementById("quizOutput"), quiz);
+
+      // Concept Map
       renderConceptMap(document.getElementById("conceptOutput"), conceptMap);
 
+      // Diagnostics Breakdown
       const breakdownList = document.getElementById("breakdownOutput");
       breakdownList.innerHTML = "";
-      renderBreakdownItem(breakdownList, "Source length", `${sourceWordCount.toLocaleString()} words`);
-      renderBreakdownItem(breakdownList, "Summary length", `${summaryWordCount.toLocaleString()} words`);
-      renderBreakdownItem(breakdownList, "Coverage", keyPoints.length >= 5 ? "Broad topic coverage" : "Focused topic coverage");
-      renderBreakdownItem(breakdownList, "Difficulty feel", sourceWordCount > 350 ? "Dense notes, best revised in chunks" : "Moderate notes, suited to one-pass review");
+      renderBreakdownRow(breakdownList, "Source words", `${sourceWordCount.toLocaleString()} words`);
+      renderBreakdownRow(breakdownList, "Summary length", `${summaryWordCount.toLocaleString()} words`);
+      renderBreakdownRow(breakdownList, "Verified fact-checks", `${webGrounding.length} entries`);
+      renderBreakdownRow(breakdownList, "Topic coverage feel", keyPoints.length >= 5 ? "Comprehensive Mastery" : "Core Essentials");
 
-      const focusList = document.getElementById("focusOutput");
-      focusList.innerHTML = "";
-      buildFocusAreas(keyPoints, summarySentences, simpleExplanation).forEach((item) => {
-        const li = document.createElement("li");
-        li.textContent = item;
-        focusList.appendChild(li);
+      // Study Tips
+      const tipsList = document.getElementById("tipsOutput");
+      tipsList.innerHTML = "";
+      studyTips.forEach((tip, idx) => {
+        const item = document.createElement("div");
+        item.className = "tip-action-item";
+        item.innerHTML = `
+          <div class="tip-icon-bullet">${idx + 1}</div>
+          <div class="tip-text">${escapeHtml(tip)}</div>
+        `;
+        tipsList.appendChild(item);
       });
 
+      // Mode Badge
       document.getElementById("modeBadge").textContent =
         data.mode === "ai"
-          ? "AI-generated revision pack"
-          : "Local summary mode";
+          ? "✨ AI & Google Grounded"
+          : data.mode === "research"
+          ? "🔍 Live Google Research"
+          : "⚡ Search-Grounded Engine";
+
+      // Setup Live Search in Dashboard
+      setupInPackSearch();
+
+      // Setup Filter Tabs
+      setupFilterTabs();
+
+      // Setup Actions
+      setupActions(data);
     }
 
-    function goBack() {
-      window.location.href = "/";
-    }
-
-    function countWords(text) {
-      return text.trim().split(/\s+/).filter(Boolean).length;
-    }
-
-    function splitIntoSentences(text) {
-      return text
-        .split(/(?<=[.!?])\s+/)
-        .map((sentence) => sentence.trim())
-        .filter(Boolean);
-    }
-
-    function renderInsightChips(container, items) {
+    // ------------------------------------------------------------------------
+    // Google Search Grounding Fact Cards
+    // ------------------------------------------------------------------------
+    function renderGroundingCards(container, groundingList, topicTitle) {
       container.innerHTML = "";
-      items.forEach((item) => {
-        const chip = document.createElement("span");
-        chip.className = "insight-chip";
-        chip.textContent = item;
-        container.appendChild(chip);
+      if (!groundingList || groundingList.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-muted);">No external search grounding items needed for this passage.</p>`;
+        return;
+      }
+
+      groundingList.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "grounding-card";
+
+        const termTitle = item.term || item.title || "Key Fact";
+        const snippet = item.snippet || "";
+        const source = item.source || "Google Search";
+        const searchUrl = item.googleSearchUrl || `https://www.google.com/search?q=${encodeURIComponent(termTitle + " " + topicTitle)}`;
+
+        card.innerHTML = `
+          <div>
+            <div class="grounding-title">
+              <span>${escapeHtml(termTitle)}</span>
+              <span class="grounding-source-tag">${escapeHtml(source)}</span>
+            </div>
+            <p class="grounding-snippet">${escapeHtml(snippet)}</p>
+          </div>
+          <a href="${searchUrl}" target="_blank" rel="noopener noreferrer" class="grounding-action-btn">
+            <span>Search on Google ↗</span>
+          </a>
+        `;
+        container.appendChild(card);
       });
     }
 
-    function renderBreakdownItem(container, label, value) {
-      const term = document.createElement("dt");
-      term.textContent = label;
-      const description = document.createElement("dd");
-      description.textContent = value;
-      container.appendChild(term);
-      container.appendChild(description);
+    // ------------------------------------------------------------------------
+    // Common Misconceptions Renderer
+    // ------------------------------------------------------------------------
+    function renderMisconceptions(container, misconceptions) {
+      container.innerHTML = "";
+      if (!misconceptions || misconceptions.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-muted);">No specific pitfalls noted for this material.</p>`;
+        return;
+      }
+
+      misconceptions.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "misconception-card";
+
+        const wrongText = item.misconception || item.myth || item;
+        const correctText = item.correction || item.fact || "Review the exact definition and boundary conditions.";
+
+        card.innerHTML = `
+          <div class="misconception-header">
+            <span>⚠️ Frequent Student Error:</span>
+          </div>
+          <div class="misconception-text">
+            <strong>"${escapeHtml(wrongText)}"</strong>
+          </div>
+          <div class="correction-box">
+            <span>✅ <strong>Correct Understanding:</strong> ${escapeHtml(correctText)}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
     }
 
-    function buildFocusAreas(keyPoints, summarySentences, simpleExplanation) {
-      const focusAreas = [];
-
-      if (keyPoints[0]) {
-        focusAreas.push(`Start with this core idea: ${keyPoints[0]}`);
+    // ------------------------------------------------------------------------
+    // Cheat-Sheet / Key Facts
+    // ------------------------------------------------------------------------
+    function renderCheatSheet(container, items) {
+      container.innerHTML = "";
+      if (!items || items.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-muted);">No quick facts configured.</p>`;
+        return;
       }
 
-      if (keyPoints[1]) {
-        focusAreas.push(`Next, make sure you can explain this in your own words: ${keyPoints[1]}`);
-      }
-
-      if (summarySentences[0]) {
-        focusAreas.push(`Use the main summary to understand the wider context: ${summarySentences[0]}`);
-      }
-
-      if (simpleExplanation) {
-        focusAreas.push("Finish by revising the simple explanation out loud to check that the topic really makes sense.");
-      }
-
-      return focusAreas.slice(0, 4);
+      items.forEach((item) => {
+        const el = document.createElement("div");
+        el.className = "cheatsheet-item";
+        el.innerHTML = `
+          <span class="cheatsheet-label">${escapeHtml(item.label || "Fact")}</span>
+          <span class="cheatsheet-val">${escapeHtml(item.value || "")}</span>
+        `;
+        container.appendChild(el);
+      });
     }
 
+    // ------------------------------------------------------------------------
+    // Real-World Applications
+    // ------------------------------------------------------------------------
+    function renderRealWorldApps(container, apps) {
+      container.innerHTML = "";
+      if (!apps || apps.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-muted);">No applications specified.</p>`;
+        return;
+      }
+
+      const icons = ["🔬", "💻", "🏥", "🚀", "⚡", "🌿"];
+
+      apps.forEach((app, idx) => {
+        const card = document.createElement("div");
+        card.className = "app-card";
+        card.innerHTML = `
+          <span class="app-icon">${icons[idx % icons.length]}</span>
+          <span class="app-text">${escapeHtml(app)}</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // ------------------------------------------------------------------------
+    // In-Pack Live Google Search Setup
+    // ------------------------------------------------------------------------
+    function setupInPackSearch() {
+      const searchInput = document.getElementById("inPackSearchInput");
+      const searchBtn = document.getElementById("inPackSearchBtn");
+      const resultsBox = document.getElementById("liveSearchResultsBox");
+
+      if (!searchInput || !searchBtn || !resultsBox) return;
+
+      const triggerSearch = async () => {
+        const query = searchInput.value.trim();
+        if (!query) return;
+
+        searchBtn.disabled = true;
+        searchBtn.textContent = "Searching...";
+        resultsBox.classList.remove("hidden");
+        resultsBox.innerHTML = `<p style="color:var(--text-secondary);">🔍 Fetching Google & authoritative web search results for "${escapeHtml(query)}"...</p>`;
+
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+          if (!res.ok) throw new Error("Search request failed");
+          const data = await res.json();
+          const results = data.results || [];
+
+          if (results.length === 0) {
+            resultsBox.innerHTML = `
+              <p style="color:var(--text-secondary); margin-bottom:8px;">No instant snippets found for "${escapeHtml(query)}".</p>
+              <a href="${data.googleSearchUrl}" target="_blank" rel="noopener noreferrer" class="grounding-action-btn">
+                Open in Google Search ↗
+              </a>
+            `;
+          } else {
+            resultsBox.innerHTML = `
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <strong style="font-size:1rem; color:var(--text-main);">🔍 Top Web Search Results for "${escapeHtml(query)}"</strong>
+                <a href="${data.googleSearchUrl}" target="_blank" rel="noopener noreferrer" class="grounding-action-btn" style="margin:0;">
+                  Open all in Google ↗
+                </a>
+              </div>
+              <div class="search-modal-results">
+                ${results.map((r) => `
+                  <div class="search-result-row">
+                    <a href="${r.url}" target="_blank" rel="noopener noreferrer" class="search-result-title">${escapeHtml(r.title)}</a>
+                    <span style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(r.source)}</span>
+                    <p class="search-result-snippet">${escapeHtml(r.snippet)}</p>
+                  </div>
+                `).join("")}
+              </div>
+            `;
+          }
+        } catch (err) {
+          resultsBox.innerHTML = `<p style="color:var(--rose);">Error querying search: ${escapeHtml(err.message)}</p>`;
+        } finally {
+          searchBtn.disabled = false;
+          searchBtn.textContent = "Search Google";
+        }
+      };
+
+      searchBtn.addEventListener("click", triggerSearch);
+      searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") triggerSearch();
+      });
+    }
+
+    // ------------------------------------------------------------------------
+    // Interactive Flashcards with Mastery
+    // ------------------------------------------------------------------------
+    function renderFlashcards(container, flashcards) {
+      container.innerHTML = "";
+      const masteryBadge = document.getElementById("flashcardMasteryText");
+      if (flashcards.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-muted);">No flashcards generated for this topic.</p>`;
+        if (masteryBadge) masteryBadge.textContent = "0 / 0 Mastered";
+        return;
+      }
+
+      const masteredSet = new Set();
+      const updateMastery = () => {
+        if (masteryBadge) {
+          masteryBadge.textContent = `${masteredSet.size} / ${flashcards.length} Mastered`;
+        }
+      };
+      updateMastery();
+
+      flashcards.forEach((card, index) => {
+        const item = document.createElement("div");
+        item.className = "flashcard-item";
+        item.tabIndex = 0;
+        item.setAttribute("role", "button");
+        item.setAttribute("aria-label", `Flashcard ${index + 1}: ${card.front}. Press Enter to flip.`);
+
+        item.innerHTML = `
+          <div class="flashcard-inner">
+            <div class="flashcard-face flashcard-front">
+              <span class="flashcard-top-tag">Question ${index + 1}</span>
+              <p class="flashcard-main-text">${escapeHtml(card.front)}</p>
+              <span class="flashcard-hint">Tap or press Enter to reveal 🔄</span>
+            </div>
+            <div class="flashcard-face flashcard-back">
+              <span class="flashcard-top-tag" style="color:var(--emerald);">Answer</span>
+              <p class="flashcard-main-text">${escapeHtml(card.back)}</p>
+              <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-top:8px;">
+                <button type="button" class="ghost-btn mastery-btn" style="padding:4px 10px; font-size:0.75rem;" data-card-idx="${index}">
+                  👍 Got it!
+                </button>
+                <span class="flashcard-hint">Flip back 🔄</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const toggleFlip = () => item.classList.toggle("is-flipped");
+
+        item.addEventListener("click", (e) => {
+          if (e.target.closest(".mastery-btn")) return;
+          toggleFlip();
+        });
+
+        item.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleFlip();
+          }
+        });
+
+        const mBtn = item.querySelector(".mastery-btn");
+        if (mBtn) {
+          mBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (masteredSet.has(index)) {
+              masteredSet.delete(index);
+              mBtn.textContent = "👍 Got it!";
+              mBtn.style.background = "";
+            } else {
+              masteredSet.add(index);
+              mBtn.textContent = "✅ Mastered!";
+              mBtn.style.background = "var(--emerald-subtle)";
+              mBtn.style.borderColor = "var(--emerald)";
+              showToast(`Marked card ${index + 1} as mastered!`);
+            }
+            updateMastery();
+          });
+        }
+
+        container.appendChild(item);
+      });
+    }
+
+    // ------------------------------------------------------------------------
+    // Interactive Quiz with Live Scoring
+    // ------------------------------------------------------------------------
+    function renderQuiz(container, questions) {
+      container.innerHTML = "";
+      const scoreBanner = document.getElementById("quizScoreBanner");
+      const scoreText = document.getElementById("quizScoreText");
+      const resetBtn = document.getElementById("resetQuizBtn");
+
+      if (questions.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-muted);">No quiz questions generated for this topic.</p>`;
+        return;
+      }
+
+      let correctCount = 0;
+      let answeredCount = 0;
+      const letters = ["A", "B", "C", "D"];
+
+      const updateScore = () => {
+        if (scoreBanner && scoreText) {
+          scoreBanner.classList.remove("hidden");
+          const pct = Math.round((correctCount / questions.length) * 100);
+          scoreText.textContent = `Score: ${correctCount} / ${questions.length} (${pct}%)`;
+        }
+      };
+
+      questions.forEach((q, qIndex) => {
+        const card = document.createElement("div");
+        card.className = "quiz-card";
+
+        const qTitle = document.createElement("div");
+        qTitle.className = "quiz-question-title";
+        qTitle.innerHTML = `<span class="quiz-q-num">Q${qIndex + 1}.</span> <span>${escapeHtml(q.question)}</span>`;
+        card.appendChild(qTitle);
+
+        const optionsGrid = document.createElement("div");
+        optionsGrid.className = "quiz-options-grid";
+
+        (q.options || []).forEach((opt, optIndex) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "quiz-option-btn";
+          btn.innerHTML = `
+            <span class="option-letter">${letters[optIndex] || String.fromCharCode(65 + optIndex)}</span>
+            <span>${escapeHtml(opt)}</span>
+          `;
+
+          btn.addEventListener("click", () => {
+            const isCorrect = optIndex === q.answerIndex;
+            answeredCount++;
+            if (isCorrect) correctCount++;
+            updateScore();
+
+            Array.from(optionsGrid.children).forEach((childBtn, i) => {
+              childBtn.disabled = true;
+              if (i === q.answerIndex) {
+                childBtn.classList.add("quiz-correct");
+              } else if (i === optIndex && !isCorrect) {
+                childBtn.classList.add("quiz-wrong");
+              }
+            });
+
+            const feedback = document.createElement("div");
+            feedback.className = "quiz-feedback-box";
+            feedback.innerHTML = `
+              <p style="font-weight:700; color:${isCorrect ? 'var(--emerald)' : 'var(--rose)'}; margin-bottom:4px;">
+                ${isCorrect ? '✅ Correct!' : '❌ Not quite.'}
+              </p>
+              <p style="color:var(--text-secondary);">${escapeHtml(q.explanation || "")}</p>
+            `;
+            card.appendChild(feedback);
+          });
+
+          optionsGrid.appendChild(btn);
+        });
+
+        card.appendChild(optionsGrid);
+        container.appendChild(card);
+      });
+
+      if (resetBtn) {
+        resetBtn.onclick = () => {
+          correctCount = 0;
+          answeredCount = 0;
+          if (scoreBanner) scoreBanner.classList.add("hidden");
+          renderQuiz(container, questions);
+          showToast("Quiz reset. Good luck!");
+        };
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // Concept Map Renderer
+    // ------------------------------------------------------------------------
+    function renderConceptMap(container, conceptMap) {
+      container.innerHTML = "";
+      if (!conceptMap || !conceptMap.central) {
+        container.innerHTML = `<p style="color:var(--text-muted);">No concept map generated for this topic.</p>`;
+        return;
+      }
+
+      const hub = document.createElement("div");
+      hub.className = "concept-hub-node";
+      hub.innerHTML = `<span>⚡ ${escapeHtml(conceptMap.central)}</span>`;
+      container.appendChild(hub);
+
+      const satellites = document.createElement("div");
+      satellites.className = "concept-satellites-grid";
+
+      const nodeMap = new Map();
+      (conceptMap.nodes || []).forEach((n) => nodeMap.set(n.id, n));
+
+      (conceptMap.links || []).forEach((link) => {
+        const targetNode = nodeMap.get(link.target);
+        if (!targetNode) return;
+
+        const satCard = document.createElement("div");
+        satCard.className = "concept-satellite-card";
+        satCard.innerHTML = `
+          <span class="concept-rel-label">↳ ${escapeHtml(link.label || "connected to")}</span>
+          <span class="concept-node-title">${escapeHtml(targetNode.label || targetNode.id)}</span>
+        `;
+        satellites.appendChild(satCard);
+      });
+
+      if (satellites.children.length > 0) {
+        container.appendChild(satellites);
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // Glossary & Sticky Notes
+    // ------------------------------------------------------------------------
     function renderGlossary(container, keyTerms) {
       container.innerHTML = "";
       if (keyTerms.length === 0) {
-        container.textContent = "No glossary terms were extracted from these notes.";
+        container.innerHTML = `<p style="color:var(--text-muted);">No glossary terms extracted.</p>`;
         return;
       }
-      keyTerms.forEach((entry) => {
-        const term = document.createElement("dt");
-        term.textContent = entry.term || "";
-        const definition = document.createElement("dd");
-        definition.textContent = entry.definition || "";
-        container.appendChild(term);
-        container.appendChild(definition);
+      keyTerms.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "glossary-card";
+        card.innerHTML = `
+          <span class="term-title">${escapeHtml(item.term || "")}</span>
+          <span class="term-def">${escapeHtml(item.definition || "")}</span>
+        `;
+        container.appendChild(card);
       });
     }
 
     function renderStickyNotes(container, stickyNotes) {
       container.innerHTML = "";
       if (stickyNotes.length === 0) {
-        container.textContent = "No sticky-note reminders were generated for these notes.";
+        container.innerHTML = `<p style="color:var(--text-muted);">No sticky notes generated.</p>`;
         return;
       }
       stickyNotes.forEach((note) => {
-        const noteEl = document.createElement("div");
-        noteEl.className = "sticky-note";
-        noteEl.textContent = note;
-        container.appendChild(noteEl);
+        const el = document.createElement("div");
+        el.className = "modern-sticky-note";
+        el.innerHTML = `
+          <span class="sticky-pin-icon">📌</span>
+          <span>${escapeHtml(note)}</span>
+        `;
+        container.appendChild(el);
       });
     }
 
-    function renderFlashcards(container, flashcards) {
+    function renderInsightChips(container, items) {
       container.innerHTML = "";
-      if (flashcards.length === 0) {
-        container.textContent = "No flashcards were generated for these notes.";
-        return;
-      }
-      flashcards.forEach((card) => {
-        const wrapper = document.createElement("div");
-        wrapper.className = "flashcard";
-        wrapper.setAttribute("role", "button");
-        wrapper.setAttribute("tabindex", "0");
-        wrapper.setAttribute("aria-label", "Flashcard. Press Enter to flip.");
+      items.forEach((text) => {
+        const chip = document.createElement("span");
+        chip.className = "insight-chip";
+        chip.textContent = text;
+        container.appendChild(chip);
+      });
+    }
 
-        const toggle = () => wrapper.classList.toggle("is-flipped");
-        wrapper.addEventListener("click", toggle);
-        wrapper.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            toggle();
+    function renderBreakdownRow(container, key, val) {
+      const row = document.createElement("div");
+      row.className = "breakdown-row";
+      row.innerHTML = `
+        <span class="breakdown-key">${escapeHtml(key)}</span>
+        <span class="breakdown-val">${escapeHtml(val)}</span>
+      `;
+      container.appendChild(row);
+    }
+
+    // ------------------------------------------------------------------------
+    // Filter Tabs
+    // ------------------------------------------------------------------------
+    function setupFilterTabs() {
+      const tabs = document.querySelectorAll(".filter-tab-btn");
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((t) => t.classList.remove("active"));
+          tab.classList.add("active");
+
+          const filter = tab.getAttribute("data-filter");
+          applyFilter(filter);
+        });
+      });
+    }
+
+    function applyFilter(filter) {
+      const allSections = document.querySelectorAll(".results-grid-layout > article, .result-overview-card");
+      if (filter === "all") {
+        allSections.forEach((el) => el.classList.remove("hidden"));
+      } else {
+        allSections.forEach((el) => {
+          if (el.classList.contains(`section-${filter}`)) {
+            el.classList.remove("hidden");
+          } else {
+            el.classList.add("hidden");
           }
         });
-
-        const inner = document.createElement("div");
-        inner.className = "flashcard-inner";
-
-        const front = document.createElement("div");
-        front.className = "flashcard-face flashcard-front";
-        front.textContent = card.front;
-
-        const back = document.createElement("div");
-        back.className = "flashcard-face flashcard-back";
-        back.textContent = card.back;
-
-        inner.appendChild(front);
-        inner.appendChild(back);
-        wrapper.appendChild(inner);
-        container.appendChild(wrapper);
-      });
+      }
     }
 
-    function renderQuiz(container, questions) {
-      container.innerHTML = "";
-      if (questions.length === 0) {
-        container.textContent = "No quiz questions were generated for these notes.";
-        return;
-      }
-      questions.forEach((question, questionIndex) => {
-        const item = document.createElement("div");
-        item.className = "quiz-item";
-
-        const prompt = document.createElement("p");
-        prompt.className = "quiz-question";
-        prompt.textContent = `${questionIndex + 1}. ${question.question}`;
-
-        const optionsWrap = document.createElement("div");
-        optionsWrap.className = "quiz-options";
-
-        (question.options || []).forEach((option, optionIndex) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "quiz-option";
-          button.textContent = option;
-          button.addEventListener("click", () => {
-            const correct = optionIndex === question.answerIndex;
-            Array.from(optionsWrap.children).forEach((optionButton, index) => {
-              optionButton.classList.add("quiz-revealed");
-              optionButton.classList.toggle("quiz-correct", index === question.answerIndex);
-              optionButton.classList.toggle("quiz-wrong", index === optionIndex && !correct);
-              optionButton.disabled = true;
-            });
-
-            const explanation = document.createElement("p");
-            explanation.className = "quiz-explanation";
-            explanation.textContent = (correct ? "Correct! " : "Not quite. ") + (question.explanation || "");
-            item.appendChild(explanation);
+    // ------------------------------------------------------------------------
+    // Actions & Copy/Export Setup
+    // ------------------------------------------------------------------------
+    function setupActions(data) {
+      // Copy Pack All
+      const copyPackBtn = document.getElementById("copyPackBtn");
+      if (copyPackBtn) {
+        copyPackBtn.addEventListener("click", () => {
+          const md = buildMarkdownPack(data);
+          navigator.clipboard.writeText(md).then(() => {
+            showToast("Copied complete revision pack to clipboard!");
           });
-          optionsWrap.appendChild(button);
         });
+      }
 
-        item.appendChild(prompt);
-        item.appendChild(optionsWrap);
-        container.appendChild(item);
-      });
+      // Copy Summary
+      const copySummaryBtn = document.getElementById("copySummaryBtn");
+      if (copySummaryBtn) {
+        copySummaryBtn.addEventListener("click", () => {
+          navigator.clipboard.writeText(data.summary || "").then(() => {
+            showToast("Copied summary text!");
+          });
+        });
+      }
+
+      // Copy Points
+      const copyPointsBtn = document.getElementById("copyPointsBtn");
+      if (copyPointsBtn) {
+        copyPointsBtn.addEventListener("click", () => {
+          const points = (data.keyPoints || []).map((p, i) => `${i + 1}. ${p}`).join("\n");
+          navigator.clipboard.writeText(points).then(() => {
+            showToast("Copied key points checklist!");
+          });
+        });
+      }
+
+      // Export Markdown
+      const downloadMdBtn = document.getElementById("downloadMdBtn");
+      if (downloadMdBtn) {
+        downloadMdBtn.addEventListener("click", () => {
+          const md = buildMarkdownPack(data);
+          const blob = new Blob([md], { type: "text/markdown" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${(data.title || "revision_pack").toLowerCase().replace(/[^a-z0-9]/g, "_")}.md`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          showToast("Exported revision pack as Markdown!");
+        });
+      }
+
+      // Print Sheet
+      const printBtn = document.getElementById("printBtn");
+      if (printBtn) {
+        printBtn.addEventListener("click", () => {
+          window.print();
+        });
+      }
     }
 
-    function renderConceptMap(container, conceptMap) {
-      container.innerHTML = "";
-      if (!conceptMap || !conceptMap.central) {
-        container.textContent = "No concept map was generated for these notes.";
-        return;
+    function buildMarkdownPack(data) {
+      let md = `# ${data.title || "Study Notes Revision Pack"}\n\n`;
+      md += `## 📖 Summary\n${data.summary || ""}\n\n`;
+      md += `## 🤖 Explain Like I'm 10\n${data.simpleExplanation || ""}\n\n`;
+
+      if (data.webGrounding?.length) {
+        md += `## 🔍 Google Search & Verified Fact-Checks\n`;
+        data.webGrounding.forEach((g) => {
+          md += `- **${g.term || g.title}** (${g.source}): ${g.snippet}\n`;
+        });
+        md += `\n`;
       }
 
-      const central = document.createElement("div");
-      central.className = "concept-central";
-      central.textContent = conceptMap.central;
-
-      const branch = document.createElement("div");
-      branch.className = "concept-branch";
-
-      const nodeById = new Map();
-      (conceptMap.nodes || []).forEach((node) => nodeById.set(node.id, node));
-
-      (conceptMap.links || []).forEach((link) => {
-        const target = nodeById.get(link.target);
-        if (!target) return;
-
-        const row = document.createElement("div");
-        row.className = "concept-row";
-
-        const linkLabel = document.createElement("span");
-        linkLabel.className = "concept-link-label";
-        linkLabel.textContent = link.label || "related to";
-
-        const nodeEl = document.createElement("span");
-        nodeEl.className = "concept-node";
-        nodeEl.textContent = target.label || target.id;
-
-        row.appendChild(linkLabel);
-        row.appendChild(nodeEl);
-        branch.appendChild(row);
-      });
-
-      container.appendChild(central);
-      if (branch.childNodes.length > 0) {
-        container.appendChild(branch);
+      if (data.commonMisconceptions?.length) {
+        md += `## ⚠️ Common Exam Traps & Misconceptions\n`;
+        data.commonMisconceptions.forEach((m) => {
+          md += `- ❌ **Misconception:** ${m.misconception}\n  - ✅ **Correction:** ${m.correction}\n`;
+        });
+        md += `\n`;
       }
+
+      if (data.keyPoints?.length) {
+        md += `## 📌 Key Exam Points\n`;
+        data.keyPoints.forEach((p, i) => md += `${i + 1}. ${p}\n`);
+        md += `\n`;
+      }
+
+      if (data.keyFactsCheatSheet?.length) {
+        md += `## ⚡ Quick Facts & Cheat Sheet\n`;
+        data.keyFactsCheatSheet.forEach((f) => md += `- **${f.label}:** ${f.value}\n`);
+        md += `\n`;
+      }
+
+      if (data.realWorldApplications?.length) {
+        md += `## 🌐 Real-World Applications\n`;
+        data.realWorldApplications.forEach((a) => md += `- ${a}\n`);
+        md += `\n`;
+      }
+
+      if (data.keyTerms?.length) {
+        md += `## 📚 Key Glossary Terms\n`;
+        data.keyTerms.forEach((t) => md += `- **${t.term}**: ${t.definition}\n`);
+        md += `\n`;
+      }
+
+      if (data.flashcards?.length) {
+        md += `## 🎴 Flashcards\n`;
+        data.flashcards.forEach((f, i) => md += `**Q${i + 1}: ${f.front}**\n*A: ${f.back}*\n\n`);
+      }
+
+      if (data.quiz?.length) {
+        md += `## ❓ Quiz Questions\n`;
+        data.quiz.forEach((q, i) => {
+          md += `### ${i + 1}. ${q.question}\n`;
+          (q.options || []).forEach((opt, j) => {
+            const letter = String.fromCharCode(65 + j);
+            const isAns = j === q.answerIndex ? " (Correct)" : "";
+            md += `- [${letter}] ${opt}${isAns}\n`;
+          });
+          md += `*Explanation: ${q.explanation}*\n\n`;
+        });
+      }
+
+      if (data.stickyNotes?.length) {
+        md += `## 📌 Sticky Notes\n`;
+        data.stickyNotes.forEach((s) => md += `- ${s}\n`);
+        md += `\n`;
+      }
+
+      if (data.studyTips?.length) {
+        md += `## 💡 Study Smarter Tips\n`;
+        data.studyTips.forEach((t) => md += `- ${t}\n`);
+      }
+
+      return md;
+    }
+
+    // ------------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------------
+    function countWords(str) {
+      return (str || "").trim().split(/\s+/).filter(Boolean).length;
+    }
+
+    function splitIntoSentences(text) {
+      return (text || "")
+        .split(/(?<=[.!?])\s+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    function escapeHtml(str) {
+      return (str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function showToast(message) {
+      let container = document.querySelector("#toastContainer");
+      if (!container) {
+        container = document.createElement("div");
+        container.id = "toastContainer";
+        container.className = "toast-container";
+        document.body.appendChild(container);
+      }
+
+      const toast = document.createElement("div");
+      toast.className = "toast-item";
+      toast.innerHTML = `<span>✨ ${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add("toast-out");
+        setTimeout(() => toast.remove(), 250);
+      }, 2600);
     }
   </script>
-
 </body>
 </html>
+

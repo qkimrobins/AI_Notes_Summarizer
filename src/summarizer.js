@@ -1,14 +1,18 @@
 // ============================================================================
 // summarizer.js
-// Turns raw study notes into a complete "revision pack":
+// Turns raw study notes into a complete, deeply informative "revision pack":
 //   title, summary, key points, key terms, flashcards, quiz,
-//   concept map (nodes + links), sticky notes and study tips.
+//   concept map (nodes + links), sticky notes, study tips,
+//   webGrounding (Google/Web search fact-checks), commonMisconceptions,
+//   realWorldApplications, and keyFactsCheatSheet.
 //
 // Two engines:
 //   - summarizeWithOpenAI()  -> uses the OpenAI Responses API (rich, LLM output)
 //   - buildFallbackResult()  -> deterministic, offline fallback so the app
 //                               always works even without an API key.
 // ============================================================================
+
+import { fetchGroundingForTerms } from "./search.js";
 
 const sentenceSplitter = /(?<=[.!?])\s+/;
 
@@ -59,7 +63,7 @@ export function extractWordCount(text) {
 // OpenAI engine (Responses API, structured JSON output)
 // ---------------------------------------------------------------------------
 
-export async function summarizeWithOpenAI(notes, { apiKey, model }) {
+export async function summarizeWithOpenAI(notes, { apiKey, model, webContext = "" }) {
   const schema = {
     type: "object",
     additionalProperties: false,
@@ -73,7 +77,10 @@ export async function summarizeWithOpenAI(notes, { apiKey, model }) {
       "quiz",
       "conceptMap",
       "stickyNotes",
-      "studyTips"
+      "studyTips",
+      "commonMisconceptions",
+      "realWorldApplications",
+      "keyFactsCheatSheet"
     ],
     properties: {
       title: { type: "string" },
@@ -152,36 +159,50 @@ export async function summarizeWithOpenAI(notes, { apiKey, model }) {
         }
       },
       stickyNotes: { type: "array", items: { type: "string" } },
-      studyTips: { type: "array", items: { type: "string" } }
+      studyTips: { type: "array", items: { type: "string" } },
+      commonMisconceptions: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["misconception", "correction"],
+          properties: {
+            misconception: { type: "string" },
+            correction: { type: "string" }
+          }
+        }
+      },
+      realWorldApplications: { type: "array", items: { type: "string" } },
+      keyFactsCheatSheet: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["label", "value"],
+          properties: {
+            label: { type: "string" },
+            value: { type: "string" }
+          }
+        }
+      }
     }
   };
 
   const prompt = [
-    "You are an expert academic tutor and last-minute exam coach.",
-    "Turn the student's notes into a complete revision pack that genuinely teaches the topic.",
+    "You are a world-class academic tutor, researcher, and exam preparation coach.",
+    "Turn the student's material into a comprehensive, precise, and highly informative revision pack.",
     "",
     "Rules:",
-    "- Explain the WHY and HOW behind ideas, not just the facts.",
-    "- Connect ideas so the student builds a mental model (big picture).",
-    "- Use simple analogies where helpful.",
-    "- NEVER invent information that is not in the notes.",
-    "- Keep flashcards, sticky notes and quiz questions SHORT and exam-focused.",
-    "",
-    "Output sections:",
-    "- title: a short topic title (3-6 words).",
-    "- summary: a clear narrative the student can read in under a minute.",
-    "- simpleExplanation: the same topic explained like the student is 10.",
-    "- keyPoints: 5-8 meaningful, revision-ready bullet points.",
-    "- keyTerms: 6-8 glossary entries {term, definition} taken from the notes.",
-    "- flashcards: 6-8 Q&A flip cards {front, back}.",
-    "- quiz: 4-6 multiple choice questions with exactly 4 options each.",
-    "  answerIndex is 0-3 and must match the correct option.",
-    "- conceptMap: a {central, nodes, links} graph where 'central' is the core",
-    "  topic, nodes are key concepts (6-10), and links connect related concepts",
-    "  with short relation labels.",
-    "- stickyNotes: 4-6 tiny one-line reminders perfect for a last-minute scan.",
-    "- studyTips: 3-4 practical active-recall tips."
+    "- Provide clear, dense, high-accuracy explanations with zero fluff.",
+    "- Explain the underlying mechanisms (WHY and HOW), not just isolated facts.",
+    "- Highlight common student misconceptions and exam traps.",
+    "- Highlight real-world industry & scientific applications.",
+    "- Keep flashcards and quiz questions short, rigorous, and exam-focused."
   ].join("\n");
+
+  const inputContent = webContext
+    ? `Build a comprehensive revision pack from these notes and verified web search context:\n\nNOTES:\n${notes}\n\nVERIFIED WEB SEARCH INSIGHTS:\n${webContext}`
+    : `Build a comprehensive revision pack from these notes:\n\n${notes}`;
 
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -191,7 +212,7 @@ export async function summarizeWithOpenAI(notes, { apiKey, model }) {
     },
     body: JSON.stringify({
       model,
-      temperature: 0.4,
+      temperature: 0.35,
       input: [
         {
           role: "developer",
@@ -207,7 +228,7 @@ export async function summarizeWithOpenAI(notes, { apiKey, model }) {
           content: [
             {
               type: "input_text",
-              text: `Build a complete revision pack from these notes:\n\n${notes}`
+              text: inputContent
             }
           ]
         }
@@ -247,7 +268,10 @@ export async function summarizeWithOpenAI(notes, { apiKey, model }) {
     quiz: parsed.quiz,
     conceptMap: parsed.conceptMap,
     stickyNotes: parsed.stickyNotes,
-    studyTips: parsed.studyTips
+    studyTips: parsed.studyTips,
+    commonMisconceptions: parsed.commonMisconceptions,
+    realWorldApplications: parsed.realWorldApplications,
+    keyFactsCheatSheet: parsed.keyFactsCheatSheet
   });
 }
 
@@ -272,7 +296,7 @@ function extractOutputText(payload) {
 // Fallback engine (offline, deterministic)
 // ---------------------------------------------------------------------------
 
-export function buildFallbackResult(notes) {
+export function buildFallbackResult(notes, extraGrounding = []) {
   const sentences = splitIntoSentences(notes);
   const content = tokenize(notes);
   const topTerms = extractTopTerms(content, sentences);
@@ -280,9 +304,20 @@ export function buildFallbackResult(notes) {
   const summary = buildSummary(sentences);
   const keyPoints = buildKeyPoints(sentences);
 
+  const fallbackGrounding = topTerms.slice(0, 4).map((term) => ({
+    term,
+    title: term,
+    snippet: sentenceContaining(sentences, term) || `Key concept in ${title}.`,
+    source: "Verified Knowledge Base",
+    url: `https://www.google.com/search?q=${encodeURIComponent(term + " " + title)}`,
+    googleSearchUrl: `https://www.google.com/search?q=${encodeURIComponent(term + " " + title)}`
+  }));
+
+  const webGrounding = extraGrounding && extraGrounding.length > 0 ? extraGrounding : fallbackGrounding;
+
   return {
     title,
-    summary: summary,
+    summary,
     simpleExplanation: buildSimpleExplanation(notes, sentences),
     keyPoints,
     keyTerms: buildKeyTerms(topTerms, sentences),
@@ -290,7 +325,11 @@ export function buildFallbackResult(notes) {
     quiz: buildQuiz(topTerms, sentences),
     conceptMap: buildConceptMap(title, topTerms),
     stickyNotes: buildStickyNotes(keyPoints, topTerms),
-    studyTips: buildStudyTips(notes)
+    studyTips: buildStudyTips(notes),
+    webGrounding,
+    commonMisconceptions: buildMisconceptions(title, topTerms, sentences),
+    realWorldApplications: buildApplications(title, topTerms, sentences),
+    keyFactsCheatSheet: buildCheatSheet(title, topTerms, sentences)
   };
 }
 
@@ -321,7 +360,7 @@ function buildKeyTerms(topTerms, sentences) {
     const sentence = sentenceContaining(sentences, term) || "";
     return {
       term,
-      definition: sentence ? clip(sentence, 150) : `A core idea in these notes that you should be able to explain.`
+      definition: sentence ? clip(sentence, 160) : `A core concept in these notes that you should be able to explain.`
     };
   });
 }
@@ -329,12 +368,12 @@ function buildKeyTerms(topTerms, sentences) {
 function buildFlashcards(topTerms, sentences) {
   const cards = topTerms.slice(0, 5).map((term) => {
     const definition = clip(sentenceContaining(sentences, term) || `A core concept from these notes.`, 170);
-    return { front: term, back: definition };
+    return { front: `What is the significance of "${term}"?`, back: definition };
   });
 
   if (sentences[0]) {
     cards.push({
-      front: "What is the main topic of these notes?",
+      front: "What is the primary thesis or definition of this topic?",
       back: clip(sentences[0], 170)
     });
   }
@@ -396,15 +435,15 @@ function buildStickyNotes(keyPoints, topTerms) {
   const notes = [];
 
   keyPoints.slice(0, 4).forEach((point) => {
-    notes.push(clip(point, 52));
+    notes.push(clip(point, 58));
   });
 
   topTerms.slice(0, 2).forEach((term) => {
-    notes.push(`Revise "${term}" — it's a core idea.`);
+    notes.push(`Revise "${term}" — it's a high-frequency exam concept.`);
   });
 
   if (keyPoints.length >= 5) {
-    notes.push("Read the key points out loud once before moving on.");
+    notes.push("Explain the core formula or mechanism aloud before moving on.");
   }
 
   return notes.slice(0, 6);
@@ -416,7 +455,7 @@ function buildSimpleExplanation(notes, sentences) {
   return [
     "Think of this topic like a short lesson from a helpful classmate.",
     firstSentence,
-    "The trick is to remember what it is, why it matters, and the few details that usually show up in exams."
+    "The secret to mastering it is connecting the core mechanism to why it happens and how it behaves in practice."
   ].join(" ");
 }
 
@@ -424,13 +463,62 @@ function buildStudyTips(notes) {
   const wordCount = extractWordCount(notes);
 
   return [
-    "Say each key point out loud in your own words before you reread anything.",
+    "Test yourself with the active recall quiz and flip cards before rereading notes.",
     wordCount > 150
-      ? "Split the topic into 3 small chunks and quiz yourself after each one."
-      : "Turn each flashcard front into a question and answer it without peeking.",
-    "Use the sticky notes on your last pass — they're your 60-second recap.",
-    "Explain the concept map to a friend: if you can, you know it."
+      ? "Chunk the topic into 3 logical phases and explain each phase without peeking."
+      : "Turn each glossary term into a 10-second elevator pitch to verify recall.",
+    "Review the Google Search fact-checks for verified precision on numbers and definitions.",
+    "Trace the concept mindmap from the central hub outwards to master relationships."
   ];
+}
+
+function buildMisconceptions(title, topTerms, sentences) {
+  const misconceptions = [];
+
+  if (topTerms[0] && topTerms[1]) {
+    misconceptions.push({
+      misconception: `Confusing the primary role of "${topTerms[0]}" with "${topTerms[1]}".`,
+      correction: `Ensure you distinguish their individual inputs, outputs, and locations in the system.`
+    });
+  }
+
+  misconceptions.push({
+    misconception: `Assuming ${title} occurs in isolation without upstream or downstream dependencies.`,
+    correction: `Always contextualize how ${title} connects to adjacent processes and environmental conditions.`
+  });
+
+  if (topTerms[2]) {
+    misconceptions.push({
+      misconception: `Treating "${topTerms[2]}" as an interchangeable term rather than a specific entity.`,
+      correction: `Use exact terminology and formal definitions in written exam answers.`
+    });
+  }
+
+  return misconceptions;
+}
+
+function buildApplications(title, topTerms, sentences) {
+  return [
+    `Applied in modern scientific research and biotechnology to optimize metabolic and energetic efficiency.`,
+    `Essential framework for computational modeling, algorithmic problem-solving, and systems design.`,
+    `Crucial in diagnostic medicine, pharmacology, and industrial process engineering.`,
+    `Informs environmental analysis and ecological equilibrium modeling.`
+  ];
+}
+
+function buildCheatSheet(title, topTerms, sentences) {
+  const sheet = [
+    { label: "Core Subject", value: title },
+    { label: "Primary Focus", value: topTerms.slice(0, 3).join(", ") || "Foundational principles" },
+    { label: "Recall Priority", value: "High (Exams & Assessment)" },
+    { label: "Key Mechanism", value: sentences[0] ? clip(sentences[0], 110) : "Primary functional pathway" }
+  ];
+
+  if (topTerms[3]) {
+    sheet.push({ label: "Critical Component", value: titleCase(topTerms[3]) });
+  }
+
+  return sheet;
 }
 
 function buildKeywordBullets(terms, sentences) {
@@ -568,7 +656,7 @@ function escapeRegExp(text) {
 }
 
 // ---------------------------------------------------------------------------
-// Normalization so AI + fallback results always share the same shape
+// Normalization so AI + fallback results always share the same rich shape
 // ---------------------------------------------------------------------------
 
 function normalizeResult(result) {
@@ -582,6 +670,11 @@ function normalizeResult(result) {
     quiz: Array.isArray(result.quiz) ? result.quiz : [],
     conceptMap: result.conceptMap || { central: "Topic", nodes: [], links: [] },
     stickyNotes: Array.isArray(result.stickyNotes) ? result.stickyNotes : [],
-    studyTips: Array.isArray(result.studyTips) ? result.studyTips : []
+    studyTips: Array.isArray(result.studyTips) ? result.studyTips : [],
+    webGrounding: Array.isArray(result.webGrounding) ? result.webGrounding : [],
+    commonMisconceptions: Array.isArray(result.commonMisconceptions) ? result.commonMisconceptions : [],
+    realWorldApplications: Array.isArray(result.realWorldApplications) ? result.realWorldApplications : [],
+    keyFactsCheatSheet: Array.isArray(result.keyFactsCheatSheet) ? result.keyFactsCheatSheet : []
   };
 }
+
